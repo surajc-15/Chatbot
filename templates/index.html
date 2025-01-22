@@ -172,7 +172,7 @@
     </div>
 
     <script>
-      const API_BASE_URL = "http://127.0.0.1:8000"; // Flask backend URL
+      const API_BASE_URL = "/api";  // Relative path, since Flask will serve this under the same domain
 
       // Function to set username if exists
       function setUsername(username) {
@@ -188,7 +188,7 @@
 
       // Load chat history from the backend
       async function loadChatHistory() {
-        const response = await fetch(`${API_BASE_URL}/api/history`);
+        const response = await fetch(`${API_BASE_URL}/history`);
         const history = await response.json();
         const chatHistoryList = document.getElementById("chat-history");
         const chatBox = document.getElementById("chat-box");
@@ -255,7 +255,7 @@
         addMessage("Analyzing...", "thinking");
 
         // Send the user message to the backend
-        const response = await fetch(`${API_BASE_URL}/api/chat`, {
+        const response = await fetch(`${API_BASE_URL}/chat`, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ message: message }),
