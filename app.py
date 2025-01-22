@@ -1,8 +1,9 @@
 from flask import Flask, render_template, request, jsonify
 from dotenv import load_dotenv
 import os
-from groq import Groq  # Ensure the Groq library is installed
-from datetime import datetime  # Add the datetime module
+from groq import Groq
+from datetime import datetime
+from flask_cors import CORS  # Import CORS
 
 # Load the .env file
 load_dotenv()
@@ -17,6 +18,9 @@ client = Groq(api_key=api_key)
 
 # Initialize Flask app
 app = Flask(__name__)
+
+# Allow CORS for all domains (for development purposes)
+CORS(app)
 
 # Store chat history in memory
 chat_history = []
@@ -88,4 +92,5 @@ def history():
 
 # Run the Flask app
 if __name__ == "__main__": 
-    app.run(host='0.0.0.0', port=8000, debug=True)
+    port = int(os.environ.get("PORT", 8000))  # Use environment variable for port
+    app.run(host='0.0.0.0', port=port, debug=True)
