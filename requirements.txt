@@ -1,4 +1,4 @@
-Flask
+flask
+groq
+flask-cors
 python-dotenv
-groq  # or the correct version based on the library used
-gunicorn
