@@ -1,0 +1,24 @@
+# Python
+*.pyc
+*.pyo
+__pycache__
+
+# Flask
+instance/
+*.db
+*.sqlite
+
+# Environment variables
+.env
+
+# Virtual environment
+venv/
+.env/
+
+# IDEs
+.vscode/
+.idea/
+
+# System files
+.DS_Store
+Thumbs.db

@@ -1,0 +1,312 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>LangGuru Chat</title>
+    <style>
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+
+      body {
+        font-family: Arial, sans-serif;
+        display: flex;
+        height: 100vh;
+        background-color: #f9f9f9;
+      }
+
+      /* Sidebar styles */
+      #sidebar {
+        width: 300px;
+        background-color: #f4f4f4;
+        padding: 20px;
+        overflow-y: auto;
+        border-right: 1px solid #ddd;
+      }
+
+      #sidebar h2 {
+        margin-bottom: 20px;
+        font-size: 1.2em;
+      }
+
+      #chat-history {
+        list-style-type: none;
+        padding-left: 0;
+      }
+
+      #chat-history li {
+        margin-bottom: 15px;
+        font-size: 0.9em;
+        cursor: pointer;
+        padding: 10px;
+        background-color: #e9e9e9;
+        border-radius: 5px;
+      }
+
+      #chat-history li:hover {
+        background-color: #d1d1d1;
+      }
+
+      /* Main chat window styles */
+      #chat-window {
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+        background-color: #fff;
+      }
+
+      #header {
+        background-color: #4a90e2;
+        color: white;
+        padding: 15px;
+        font-size: 1.2em;
+        text-align: center;
+        margin-top: 10px;
+      }
+
+      #header span {
+        font-weight: bold;
+        color: #f5f5f5;
+      }
+
+      #chat-box {
+        flex: 1;
+        padding: 20px;
+        overflow-y: auto;
+        display: flex;
+        flex-direction: column;
+      }
+
+      .message {
+        max-width: 70%;
+        margin-bottom: 15px;
+        padding: 10px;
+        border-radius: 10px;
+        font-size: 1em;
+        line-height: 1.5;
+      }
+
+      .user {
+        background-color: #d4f7ff;
+        align-self: flex-end;
+      }
+
+      .bot {
+        background-color: #f1f1f1;
+        align-self: flex-start;
+      }
+
+      .thinking {
+        background-color: #f9e1e1;
+        font-style: italic;
+        color: #b0b0b0;
+        align-self: center;
+      }
+
+      #input-area {
+        display: flex;
+        padding: 15px;
+        border-top: 1px solid #ddd;
+      }
+
+      #input-field {
+        flex: 1;
+        padding: 10px;
+        border-radius: 20px;
+        border: 1px solid #ccc;
+        font-size: 1em;
+        margin-right: 10px;
+      }
+
+      #send-btn {
+        background-color: #4a90e2;
+        border: none;
+        color: white;
+        padding: 10px;
+        border-radius: 50%;
+        font-size: 1.2em;
+        cursor: pointer;
+      }
+
+      #send-btn:hover {
+        background-color: #357abd;
+      }
+
+      /* Margin for clean layout */
+      .top-margin {
+        margin-top: 20px;
+      }
+    </style>
+  </head>
+  <body>
+    <!-- Sidebar for chat history -->
+    <div id="sidebar">
+      <h2>Chat History</h2>
+      <ul id="chat-history">
+        <!-- Chat history will be dynamically loaded here -->
+      </ul>
+    </div>
+
+    <!-- Main chat window -->
+    <div id="chat-window">
+      <div id="header">
+        <span id="username-display">Welcome, User!</span>
+      </div>
+
+      <div id="chat-box" class="top-margin">
+        <!-- Messages will be added here dynamically -->
+      </div>
+
+      <!-- Input area -->
+      <div id="input-area">
+        <input
+          type="text"
+          id="input-field"
+          placeholder="Type your message..."
+        />
+        <button id="send-btn" onclick="sendMessage()">➤</button>
+      </div>
+    </div>
+
+    <script>
+      const API_BASE_URL = "http://127.0.0.1:8000"; // Flask backend URL
+
+      // Function to set username if exists
+      function setUsername(username) {
+        const usernameElement = document.getElementById("username-display");
+        if (username) {
+          usernameElement.textContent = `Welcome, ${username}!`;
+        }
+      }
+
+      // Simulate checking for username from request or cookies
+      const username = "User"; // This should be dynamically retrieved (from backend or cookies)
+      setUsername(username);
+
+      // Load chat history from the backend
+      async function loadChatHistory() {
+        const response = await fetch(`${API_BASE_URL}/api/history`);
+        const history = await response.json();
+        const chatHistoryList = document.getElementById("chat-history");
+        const chatBox = document.getElementById("chat-box");
+
+        chatBox.innerHTML = ""; // Clear the current chat box
+        chatHistoryList.innerHTML = ""; // Clear current sidebar history
+
+        // Add each message to the sidebar and the chat window
+        history.forEach((entry) => {
+          const messageDiv = document.createElement("div");
+          messageDiv.classList.add("message", "user");
+          messageDiv.textContent = entry.user;
+          chatBox.appendChild(messageDiv);
+
+          const botMessageDiv = document.createElement("div");
+          botMessageDiv.classList.add("message", "bot");
+          botMessageDiv.innerHTML = entry.bot
+            .split("\n")
+            .map((item) => `<p>${item}</p>`)
+            .join("");
+          chatBox.appendChild(botMessageDiv);
+
+          // Add to the sidebar with the correct date handling
+          const listItem = document.createElement("li");
+          listItem.textContent = `${entry.date || "No Date"}: ${entry.user}`;
+          listItem.onclick = () =>
+            loadChatHistoryByDate(entry.date, entry.user, entry.bot);
+          chatHistoryList.appendChild(listItem);
+        });
+      }
+
+      // Function to load chat history based on date
+      function loadChatHistoryByDate(date, userMessage, botResponse) {
+        const chatBox = document.getElementById("chat-box");
+        chatBox.innerHTML = ""; // Clear current chat box
+
+        // Display the selected chat from history
+        const userDiv = document.createElement("div");
+        userDiv.classList.add("message", "user");
+        userDiv.textContent = userMessage;
+        chatBox.appendChild(userDiv);
+
+        const botDiv = document.createElement("div");
+        botDiv.classList.add("message", "bot");
+        botDiv.innerHTML = botResponse
+          .split("\n")
+          .map((item) => `<p>${item}</p>`)
+          .join("");
+        chatBox.appendChild(botDiv);
+      }
+
+      // Function to send the message and add it to the chat
+      async function sendMessage() {
+        const message = document.getElementById("input-field").value;
+        if (message.trim() === "") return;
+
+        // Add user message
+        addMessage(message, "user");
+
+        // Clear input field
+        document.getElementById("input-field").value = "";
+
+        // Show "thinking" message while waiting for the bot response
+        addMessage("Analyzing...", "thinking");
+
+        // Send the user message to the backend
+        const response = await fetch(`${API_BASE_URL}/api/chat`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ message: message }),
+        });
+        const data = await response.json();
+
+        // Remove the "thinking" message
+        const thinkingMessages = document.querySelectorAll(".thinking");
+        thinkingMessages.forEach((msg) => msg.remove());
+
+        // Check if there is a valid response and add it to the chat
+        if (data.status === "success" && data.response) {
+          addMessageAsBulletPoints(data.response);
+        } else {
+          addMessage("Sorry, I couldn't understand that.", "bot");
+        }
+
+        // Reload the chat history in the sidebar
+        loadChatHistory();
+      }
+
+      // Function to add a message to the chat box
+      function addMessage(message, sender) {
+        const chatBox = document.getElementById("chat-box");
+        const messageDiv = document.createElement("div");
+        messageDiv.classList.add("message", sender);
+        messageDiv.textContent = message;
+        chatBox.appendChild(messageDiv);
+        chatBox.scrollTop = chatBox.scrollHeight; // Scroll to the bottom
+      }
+
+      // Function to add bot response as bullet points
+      function addMessageAsBulletPoints(response) {
+        const chatBox = document.getElementById("chat-box");
+        const messageDiv = document.createElement("div");
+        messageDiv.classList.add("message", "bot");
+
+        const ul = document.createElement("ul");
+        response.forEach((item) => {
+          const li = document.createElement("li");
+          li.textContent = item;
+          ul.appendChild(li);
+        });
+
+        messageDiv.appendChild(ul);
+        chatBox.appendChild(messageDiv);
+        chatBox.scrollTop = chatBox.scrollHeight;
+      }
+
+      // Load initial chat history when the page loads
+      loadChatHistory();
+    </script>
+  </body>
+</html>
