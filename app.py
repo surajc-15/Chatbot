@@ -67,6 +67,8 @@ def chat():
             response_list = [line.strip() for line in response_list if line.strip()]
 
             # Format the response for the front end
+
+            print(response_list)
             formatted_response = {
                 "status": "success",
                 "response": response_list,  # Send the response as a list for bullet points

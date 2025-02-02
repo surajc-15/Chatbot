@@ -1,0 +1,15 @@
+config:
+  target: "http://localhost:5000" # The Flask app's URL
+  phases:
+    - duration: 60 # Test for 60 seconds
+      arrivalRate: 10 # Send 10 requests per second
+scenarios:
+  - flow:
+      - get:
+          url: "/health" # Test the health check route
+      - get:
+          url: "/api/users" # Test the get users route
+      - post:
+          url: "/api/users" # Test the add user route
+          json:
+            name: "Charlie"
